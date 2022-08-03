@@ -10,8 +10,12 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.provisioning.JdbcUserDetailsManager
 import org.springframework.security.web.SecurityFilterChain
+import org.springframework.security.web.authentication.www.BasicAuthenticationEntryPoint
 import javax.sql.DataSource
 
+/**
+ * 安全配置
+ */
 @Configuration
 @EnableWebSecurity
 class WebSecurityConfig {
@@ -29,7 +33,24 @@ class WebSecurityConfig {
     fun securityFilter(http: HttpSecurity): SecurityFilterChain {
         http.csrf().disable()
             .authorizeRequests()
-            .antMatchers("/").permitAll()
+            .antMatchers("/user/**").hasRole("USER")
+            .antMatchers("/hello").permitAll()
+            .anyRequest().authenticated()
+            .and()
+            .formLogin().loginProcessingUrl("/xiaoming_login")
+            .and()
+            .logout().logoutUrl("/xiaoming_logout")
+            .deleteCookies("JSESSIONID")
+            .and()
+            .rememberMe()
+            .and()
+            .httpBasic()
+            .authenticationEntryPoint(object : BasicAuthenticationEntryPoint() {
+                override fun afterPropertiesSet() {
+                    realmName = "XJTUSE Xiaoming"
+                    super.afterPropertiesSet()
+                }
+            })
 
         return http.build()
     }
