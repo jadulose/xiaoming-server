@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.xjtuse.xiaoming.mapper.UserMapper">
+    <resultMap id="userResultMap" type="User">
+        <id property="email_" column="email"/>
+        <result property="password_" column="password"/>
+        <result property="enabled_" column="enabled"/>
+        <collection property="authorities_" ofType="org.springframework.security.core.authority.SimpleGrantedAuthority">
+            <constructor>
+                <arg column="authority" javaType="String"/>
+            </constructor>
+        </collection>
+    </resultMap>
+    <select id="findByEmail" resultMap="userResultMap">
+        select * from users u join authorities a on u.email = a.username
+        where email = #{email}
+    </select>
+</mapper>

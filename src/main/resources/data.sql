@@ -1,4 +1,4 @@
-INSERT INTO users (username, password, enabled)
+INSERT INTO users (email, password, enabled)
 values ('user',
         '$2a$10$8.UnVuG9HHgffUDAlk8qfOuVGkqRzgVymGe07xd00DMxs.AQubh4a',
         1);

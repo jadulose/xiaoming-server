@@ -17,5 +17,5 @@ open class Logger {
         )
     }
 
-    val log = create(this::class)
+    protected val log = create(this::class)
 }
