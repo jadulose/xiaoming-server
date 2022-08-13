@@ -17,19 +17,31 @@ data class LoginInfo(
 }
 
 data class User(
-    var email_: String,
+    var id: Int,
+    var email: String?,
+    var phone: String?,
+    var netId: String?,
+    var studentId: String?,
     var password_: String,
-    var enabled_: Boolean,
+    var name: String,
+    var enabled: Boolean,
     var authorities_: MutableList<SimpleGrantedAuthority>,
 ) : UserDetails {
 
-    constructor() : this("", "", true, mutableListOf())
+    constructor() : this(0, "", null, null, null, "", "", false, mutableListOf())
 
-    override fun getUsername() = email_
+    companion object {
+        /**
+         * 输入信息不完整（用户名和密码为空）则会返回未定义用户
+         */
+        val UNDEFINED = User()
+    }
+
+    override fun getUsername(): String = email ?: phone ?: netId ?: studentId ?: ""
 
     override fun getPassword() = password_
 
-    override fun isEnabled() = enabled_
+    override fun isEnabled() = enabled
 
     override fun getAuthorities() = authorities_
 

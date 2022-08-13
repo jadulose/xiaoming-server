@@ -6,15 +6,19 @@ import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.authentication.dao.AbstractUserDetailsAuthenticationProvider
 import org.springframework.security.core.Authentication
+import org.springframework.security.core.AuthenticationException
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter
+import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler
+import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher
 import org.xjtuse.xiaoming.model.LoginInfo
 import org.xjtuse.xiaoming.model.LoginInfo.PasswordType.*
 import org.xjtuse.xiaoming.model.LoginInfo.UsernameType.*
 import org.xjtuse.xiaoming.model.User
+import org.xjtuse.xiaoming.service.LoginAttemptService
 import org.xjtuse.xiaoming.service.UserService
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
@@ -35,10 +39,29 @@ class XiaomingAuthenticationToken(
  * @see org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
  */
 class XiaomingAuthenticationFilter(
-    authManager: AuthenticationManager
+    authManager: AuthenticationManager,
+    private val loginAttemptService: LoginAttemptService,
 ) : AbstractAuthenticationProcessingFilter(AntPathRequestMatcher(LOGIN_URL, "POST")) {
     init {
         authenticationManager = authManager
+        // Failure
+        setAuthenticationFailureHandler(object : SimpleUrlAuthenticationFailureHandler() {
+            override fun onAuthenticationFailure(
+                request: HttpServletRequest, response: HttpServletResponse, exception: AuthenticationException
+            ) {
+                loginAttemptService.loginFailed(getClientIP(request))
+                super.onAuthenticationFailure(request, response, exception)
+            }
+        })
+        // Success
+        setAuthenticationSuccessHandler(object : SavedRequestAwareAuthenticationSuccessHandler() {
+            override fun onAuthenticationSuccess(
+                request: HttpServletRequest, response: HttpServletResponse, authentication: Authentication
+            ) {
+                loginAttemptService.loginSucceeded(getClientIP(request))
+                super.onAuthenticationSuccess(request, response, authentication)
+            }
+        })
     }
 
     companion object {
@@ -48,14 +71,25 @@ class XiaomingAuthenticationFilter(
         private const val FORM_PASSWORD = "password"
         private const val FORM_USERNAME_TYPE = "${FORM_USERNAME}Type"
         private const val FORM_PASSWORD_TYPE = "${FORM_PASSWORD}Type"
+
+        private fun getClientIP(request: HttpServletRequest): String {
+            val xfHeader = request.getHeader("X-Forwarded-For")
+            return if (xfHeader == null) request.remoteAddr
+            else xfHeader.split(",")[0]
+        }
     }
 
     override fun attemptAuthentication(request: HttpServletRequest, response: HttpServletResponse): Authentication {
         if (request.method != "POST")
-            throw AuthenticationServiceException("Authentication method not supported: ${request.method}")
+            throw AuthenticationServiceException("不支持的认证方法：${request.method}")
+        val clientIP = getClientIP(request)
+        if (loginAttemptService.isBlocked(clientIP))
+            throw AuthenticationServiceException("该客户端IP（$clientIP）已被封锁")
+
+        // TODO 改用请求体而不是请求参数
         val authRequest = XiaomingAuthenticationToken(
-            request.getParameter(FORM_USERNAME) ?: "",
-            request.getParameter(FORM_PASSWORD) ?: "",
+            request.getParameter(FORM_USERNAME)?.trim() ?: User.UNDEFINED.username,
+            request.getParameter(FORM_PASSWORD)?.trim() ?: User.UNDEFINED.password,
             obtainLoginInfo(request)
         )
         authRequest.details = authenticationDetailsSource.buildDetails(request)
@@ -91,9 +125,8 @@ class XiaomingUserDetailsAuthenticationProvider(
     override fun additionalAuthenticationChecks(
         userDetails: UserDetails, authentication: UsernamePasswordAuthenticationToken
     ) {
-        if (authentication.credentials == null) {
-            badCredentials("由于未提供凭据，无法进行身份验证")
-        }
+        if (authentication.credentials == null || userDetails == User.UNDEFINED)
+            badCredentials("凭据不符合要求，无法进行身份验证")
         val presentedPassword = authentication.credentials.toString()
         if (userDetails is User && authentication is XiaomingAuthenticationToken
             && authentication.loginInfo.passwordType != PASSWORD
@@ -108,7 +141,7 @@ class XiaomingUserDetailsAuthenticationProvider(
     override fun retrieveUser(username: String, authentication: UsernamePasswordAuthenticationToken): UserDetails {
         if (authentication !is XiaomingAuthenticationToken) {
             logger.debug("暂不支持非${XiaomingAuthenticationToken::class.simpleName}类型的Token")
-            return User()
+            return User.UNDEFINED
         }
         return userService.find(username, authentication.loginInfo)
     }

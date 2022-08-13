@@ -1,20 +1,30 @@
-drop table if exists authorities;
-drop table if exists users;
+drop table if exists authority;
+drop table if exists xjtu_identity;
+drop table if exists user;
 
-CREATE TABLE users
+create table user
 (
-    email VARCHAR(50)  NOT NULL,
-    password VARCHAR(100) NOT NULL,
-    enabled  TINYINT      NOT NULL DEFAULT 1,
-    PRIMARY KEY (email)
-);
+    id       int auto_increment primary key,
+    password varchar(100) not null,
+    email    varchar(50) unique,
+    phone    varchar(50) unique,
+    enabled  bool         not null default true
+)
+    comment '用户表';
 
-CREATE TABLE authorities
+create table xjtu_identity
 (
-    username  VARCHAR(50) NOT NULL,
-    authority VARCHAR(50) NOT NULL,
-    FOREIGN KEY (username) REFERENCES users (email)
-);
+    id         int primary key references user (id),
+    net_id     varchar(50) unique,
+    student_id varchar(20) unique,
+    name       varchar(20) not null
+)
+    comment '交大身份认证表';
 
-CREATE UNIQUE INDEX ix_auth_username
-    on authorities (username, authority);
+CREATE TABLE authority
+(
+    id        int         not null references user (id),
+    authority varchar(50) not null,
+    primary key (id, authority)
+)
+    comment '权限表';

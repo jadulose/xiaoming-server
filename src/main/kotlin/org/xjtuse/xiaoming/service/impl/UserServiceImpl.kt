@@ -21,15 +21,18 @@ class UserServiceImpl : UserService {
         TODO("Not yet implemented")
     }
 
-    override fun find(username: String, info: LoginInfo) = when (info.usernameType) {
-        EMAIL -> {
-            userMapper.findByEmail(username)
-                ?: throw UsernameNotFoundException("无法找到邮箱为${username}的用户")
-        }
+    override fun find(username: String, info: LoginInfo): User {
+        if (username == User.UNDEFINED.username) return User.UNDEFINED
+        return when (info.usernameType) {
+            EMAIL -> {
+                userMapper.findByEmail(username)
+                    ?: throw UsernameNotFoundException("无法找到邮箱为${username}的用户")
+            }
 
-        PHONE -> TODO()
-        NET_ID -> TODO()
-        STUDENT_ID -> TODO()
+            PHONE -> TODO()
+            NET_ID -> TODO()
+            STUDENT_ID -> TODO()
+        }
     }
 
     override fun create(user: User) {

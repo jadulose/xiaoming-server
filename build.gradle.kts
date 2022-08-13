@@ -27,6 +27,7 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 
     implementation("org.mybatis.spring.boot:mybatis-spring-boot-starter:2.2.2")
+    implementation("com.google.guava:guava:31.1-jre")
 
     runtimeOnly("mysql:mysql-connector-java")
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")

@@ -2,9 +2,14 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.xjtuse.xiaoming.mapper.UserMapper">
     <resultMap id="userResultMap" type="User">
-        <id property="email_" column="email"/>
+        <id property="id" column="id"/>
+        <result property="email" column="email"/>
+        <result property="phone" column="phone"/>
+        <result property="netId" column="net_id"/>
+        <result property="studentId" column="student_id"/>
         <result property="password_" column="password"/>
-        <result property="enabled_" column="enabled"/>
+        <result property="name" column="name"/>
+        <result property="enabled" column="enabled"/>
         <collection property="authorities_" ofType="org.springframework.security.core.authority.SimpleGrantedAuthority">
             <constructor>
                 <arg column="authority" javaType="String"/>
@@ -12,7 +17,10 @@
         </collection>
     </resultMap>
     <select id="findByEmail" resultMap="userResultMap">
-        select * from users u join authorities a on u.email = a.username
+        select *
+        from user u
+                 left outer join xjtu_identity x on u.id = x.id
+                 left outer join authority a on u.id = a.id
         where email = #{email}
     </select>
 </mapper>

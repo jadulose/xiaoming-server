@@ -1,6 +1,5 @@
 package org.xjtuse.xiaoming.service
 
-import org.springframework.stereotype.Service
 import org.xjtuse.xiaoming.model.LoginInfo
 import org.xjtuse.xiaoming.model.User
 
