@@ -3,7 +3,7 @@ values (1, 'user@email.com', '$2a$10$j0MLshsEbRQ2YREDd9DvEuQHo//pZ6/VbsCKvMiWrcf
 # password;
 
 insert into user(id, email, password)
-values (2, 'hamlet@email.com', '$2a$10$o.jCMmA799B8l/oFo37nhuqqRMJT7uqhub6stzSo0K5pXKAlGjSrO');
+values (2, 'fanpeilin123@126.com', '$2a$10$o.jCMmA799B8l/oFo37nhuqqRMJT7uqhub6stzSo0K5pXKAlGjSrO');
 # 123456;
 
 insert into user(id, phone, password)

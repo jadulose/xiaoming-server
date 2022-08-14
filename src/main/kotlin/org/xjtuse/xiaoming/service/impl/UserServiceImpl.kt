@@ -4,7 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.core.userdetails.UsernameNotFoundException
 import org.springframework.stereotype.Service
 import org.xjtuse.xiaoming.mapper.UserMapper
-import org.xjtuse.xiaoming.model.LoginInfo
+import org.xjtuse.xiaoming.model.LoginInfo.UsernameType
 import org.xjtuse.xiaoming.model.LoginInfo.UsernameType.*
 import org.xjtuse.xiaoming.model.User
 import org.xjtuse.xiaoming.service.UserService
@@ -17,13 +17,15 @@ class UserServiceImpl : UserService {
     @Autowired
     private lateinit var userMapper: UserMapper
 
-    override fun exists(username: String, info: LoginInfo): Boolean {
-        TODO("Not yet implemented")
+    override fun exists(username: String, type: UsernameType) = try {
+        find(username, type)
+        true
+    } catch (e: UsernameNotFoundException) {
+        false
     }
 
-    override fun find(username: String, info: LoginInfo): User {
-        if (username == User.UNDEFINED.username) return User.UNDEFINED
-        return when (info.usernameType) {
+    override fun find(username: String, type: UsernameType): User {
+        return when (type) {
             EMAIL -> {
                 userMapper.findByEmail(username)
                     ?: throw UsernameNotFoundException("无法找到邮箱为${username}的用户")

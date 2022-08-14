@@ -28,6 +28,7 @@ class SecurityConfig @Autowired constructor(
     fun filterChain(http: HttpSecurity, authConfig: AuthenticationConfiguration): SecurityFilterChain =
         http.csrf().disable()
             .authorizeRequests()
+            .antMatchers("/user/login-code").permitAll()
             .antMatchers("/user/**").hasRole("USER")
             .antMatchers("/hello").permitAll()
             .anyRequest().authenticated()
@@ -36,8 +37,6 @@ class SecurityConfig @Autowired constructor(
             .and()
             .logout().logoutUrl("/xiaoming_logout")
             .deleteCookies("JSESSIONID")
-//            .and()
-//            .rememberMe()
             .and()
             .httpBasic()
             .authenticationEntryPoint(object : BasicAuthenticationEntryPoint() {

@@ -6,3 +6,9 @@ spring:
   sql:
     init:
       mode: always
+  mail:
+    protocol: xxx
+    host: xxx
+    port: xxx
+    username: xxx
+    password: xxx

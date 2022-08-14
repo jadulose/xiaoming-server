@@ -28,6 +28,7 @@ dependencies {
 
     implementation("org.mybatis.spring.boot:mybatis-spring-boot-starter:2.2.2")
     implementation("com.google.guava:guava:31.1-jre")
+    implementation("org.springframework.boot:spring-boot-starter-mail")
 
     runtimeOnly("mysql:mysql-connector-java")
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")

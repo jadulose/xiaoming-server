@@ -115,9 +115,9 @@ class XiaomingUserDetailsAuthenticationProvider(
     private val passwordEncoder: PasswordEncoder
 ) : AbstractUserDetailsAuthenticationProvider() {
 
-    private fun badCredentials(message: String) {
+    private fun badCredentials(message: String): AuthenticationException {
         logger.debug(message)
-        throw BadCredentialsException(
+        return BadCredentialsException(
             messages.getMessage("AbstractUserDetailsAuthenticationProvider.badCredentials", "Bad credentials")
         )
     }
@@ -125,8 +125,7 @@ class XiaomingUserDetailsAuthenticationProvider(
     override fun additionalAuthenticationChecks(
         userDetails: UserDetails, authentication: UsernamePasswordAuthenticationToken
     ) {
-        if (authentication.credentials == null || userDetails == User.UNDEFINED)
-            badCredentials("凭据不符合要求，无法进行身份验证")
+        authentication.credentials ?: throw badCredentials("凭据不符合要求，无法进行身份验证")
         val presentedPassword = authentication.credentials.toString()
         if (userDetails is User && authentication is XiaomingAuthenticationToken
             && authentication.loginInfo.passwordType != PASSWORD
@@ -134,16 +133,14 @@ class XiaomingUserDetailsAuthenticationProvider(
             TODO()
         } else {
             if (!passwordEncoder.matches(presentedPassword, userDetails.password))
-                badCredentials("验证失败，因为密码与存储的值不匹配")
+                throw badCredentials("验证失败，因为密码与存储的值不匹配")
         }
     }
 
     override fun retrieveUser(username: String, authentication: UsernamePasswordAuthenticationToken): UserDetails {
-        if (authentication !is XiaomingAuthenticationToken) {
-            logger.debug("暂不支持非${XiaomingAuthenticationToken::class.simpleName}类型的Token")
-            return User.UNDEFINED
-        }
-        return userService.find(username, authentication.loginInfo)
+        val auth = authentication as? XiaomingAuthenticationToken
+            ?: throw badCredentials("暂不支持非${XiaomingAuthenticationToken::class.simpleName}类型的Token")
+        return userService.find(username, auth.loginInfo.usernameType)
     }
 
 }
