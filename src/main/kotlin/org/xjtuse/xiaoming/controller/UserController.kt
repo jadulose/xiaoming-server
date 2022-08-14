@@ -27,11 +27,7 @@ class UserController @Autowired constructor(
 
     @PostMapping("login-code")
     fun loginCode(@RequestBody username: String) {
-        // TODO 异常处理&防止多次尝试
-        try {
-            val user = userService.find(username, UsernameType.EMAIL)
-            mailService.sendLoginCode(user)
-        } catch (_: UsernameNotFoundException) {
-        }
+        // TODO 防止多次尝试
+        mailService.send(userService.find(username, UsernameType.EMAIL))
     }
 }

@@ -19,6 +19,7 @@ import org.xjtuse.xiaoming.model.LoginInfo.PasswordType.*
 import org.xjtuse.xiaoming.model.LoginInfo.UsernameType.*
 import org.xjtuse.xiaoming.model.User
 import org.xjtuse.xiaoming.service.LoginAttemptService
+import org.xjtuse.xiaoming.service.LoginCodeService
 import org.xjtuse.xiaoming.service.UserService
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
@@ -112,7 +113,8 @@ class XiaomingAuthenticationFilter(
  */
 class XiaomingUserDetailsAuthenticationProvider(
     private val userService: UserService,
-    private val passwordEncoder: PasswordEncoder
+    private val loginCodeService: LoginCodeService,
+    private val passwordEncoder: PasswordEncoder,
 ) : AbstractUserDetailsAuthenticationProvider() {
 
     private fun badCredentials(message: String): AuthenticationException {
@@ -130,7 +132,11 @@ class XiaomingUserDetailsAuthenticationProvider(
         if (userDetails is User && authentication is XiaomingAuthenticationToken
             && authentication.loginInfo.passwordType != PASSWORD
         ) {
-            TODO()
+            val code = loginCodeService.get(userDetails)
+                ?: throw badCredentials("验证码已失效或未申请验证码")
+            if (presentedPassword != code)
+                throw badCredentials("验证码不匹配")
+            loginCodeService.remove(userDetails)
         } else {
             if (!passwordEncoder.matches(presentedPassword, userDetails.password))
                 throw badCredentials("验证失败，因为密码与存储的值不匹配")

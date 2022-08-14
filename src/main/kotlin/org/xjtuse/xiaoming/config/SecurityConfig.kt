@@ -13,6 +13,7 @@ import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 import org.springframework.security.web.authentication.www.BasicAuthenticationEntryPoint
 import org.xjtuse.xiaoming.service.LoginAttemptService
+import org.xjtuse.xiaoming.service.LoginCodeService
 import org.xjtuse.xiaoming.service.UserService
 
 /**
@@ -23,6 +24,7 @@ import org.xjtuse.xiaoming.service.UserService
 class SecurityConfig @Autowired constructor(
     val userService: UserService,
     val loginAttemptService: LoginAttemptService,
+    val loginCodeService: LoginCodeService,
 ) {
     @Bean
     fun filterChain(http: HttpSecurity, authConfig: AuthenticationConfiguration): SecurityFilterChain =
@@ -57,7 +59,7 @@ class SecurityConfig @Autowired constructor(
     @Autowired
     fun initialize(authBuilder: AuthenticationManagerBuilder) {
         authBuilder.authenticationProvider(
-            XiaomingUserDetailsAuthenticationProvider(userService, passwordEncoder())
+            XiaomingUserDetailsAuthenticationProvider(userService, loginCodeService, passwordEncoder())
         )
     }
 }
